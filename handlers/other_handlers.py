@@ -118,19 +118,11 @@ async def text(message: types.Message):
 
 
 async def handle_all_events():
-    message = types.Message(chat=types.Chat(id=123, type="private"), message_id=456, text="/start")
-    await send_message(message)
+    await send_message()
+    await callback()
+    await text()
 
-    query = types.CallbackQuery.from_user(user_id=123, first_name="John", data="vacancies")
-    await callback(query)
-
-    text_message = types.Message(chat=types.Chat(id=123, type="private"), message_id=457, text="Some text")
-    await text(text_message)
-
-
-async def other_handlers_main():
-    await handle_all_events()
 
 if __name__ == '__main__':
     from asyncio import run
-    run(other_handlers_main())
+    run(handle_all_events())
