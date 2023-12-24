@@ -51,10 +51,10 @@ async def send_vacancies_to_users(user_id, reply_markup):
     last_sent_card_index_dict[user_id] = last_sent_card_index + 1
 
 
-async def main():
+async def mailing():
     get_existing_forms()
     await dp.start_polling()
 
 if __name__ == '__main__':
     from asyncio import run
-    run(main())
+    run(mailing())

@@ -8,12 +8,14 @@ from keyboards.keyboard import create_keyboard
 
 secondary_keyboard = create_keyboard(show_unsubscribe_button=False)
 
+
 async def get_existing_trello_cards():
     cursor = conn.cursor()
     cursor.execute('SELECT card_id, card_name, card_desc, user_count FROM TrelloCards')
     rows = cursor.fetchall()
     existing_cards = {row[0]: {'card_name': row[1], 'card_desc': row[2], 'user_count': row[3]} for row in rows}
     return existing_cards
+
 
 async def update_database(new_cards, existing_cards):
     cursor = conn.cursor()
@@ -47,6 +49,7 @@ async def update_database(new_cards, existing_cards):
     conn.commit()
 
     return changes_occurred
+
 
 async def get_trello_cards():
     url = f'https://api.trello.com/1/boards/{TRELLO_BOARD_ID}/lists'
@@ -102,11 +105,13 @@ async def handle_new_card_addition(reply_markup=None):
             except Exception as e:
                 print(f"An error occurred while sending message to user {user_id}: {e}")
 
+
 async def get_forms_data():
     cursor = conn.cursor()
     cursor.execute('SELECT id FROM Forms')
     existing_forms = [row[0] for row in cursor.fetchall()]
     return existing_forms
+
 
 async def get_latest_card():
     cursor = conn.cursor()
@@ -114,31 +119,17 @@ async def get_latest_card():
     latest_card = cursor.fetchone()
     return {'card_name': latest_card[0], 'card_desc': latest_card[1]} if latest_card else None
 
+
 async def send_message_to_user(user_id, text):
     await dp.bot.send_message(chat_id=user_id, text=text)
 
-async def main():
-    task = asyncio.create_task(refresh_trello_cards())
 
-    try:
-        await get_existing_trello_cards()
-        await dp.start_polling()
-    except KeyboardInterrupt:
-        dp.stop_polling()
-        task.cancel()
-        await task
+async def start_refresh():
+    while True:
+        try:
+            await refresh_trello_cards()
+        except Exception as e:
+            print(f"An error occurred during Trello card refresh: {e}")
 
-if __name__ == '__main__':
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-    try:
-        loop.run_until_complete(main())
-    except KeyboardInterrupt:
-        pass
-    finally:
-        loop.run_until_complete(loop.shutdown_asyncgens())
-        loop.close()
+if __name__ == "__main__":
+    asyncio.run(start_refresh())
